@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Asistente de Computación</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      width: 100%;
+      max-width: 700px;
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .header h2 {
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      opacity: 0.9;
+      font-size: 14px;
+    }
+
+    .chat-container {
+      padding: 30px;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+
+    .message {
+      margin-bottom: 20px;
+      animation: fadeIn 0.3s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .message-label {
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #667eea;
+      font-size: 14px;
+    }
+
+    .message-content {
+      background: #f7f7f7;
+      padding: 15px;
+      border-radius: 12px;
+      line-height: 1.6;
+      color: #333;
+    }
+
+    .message.user .message-label {
+      color: #764ba2;
+    }
+
+    .message.user .message-content {
+      background: #e9e3f5;
+    }
+
+    .input-container {
+      padding: 20px 30px 30px;
+      border-top: 1px solid #eee;
+    }
+
+    .input-wrapper {
+      display: flex;
+      gap: 10px;
+    }
+
+    #pregunta {
+      flex: 1;
+      padding: 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      font-size: 15px;
+      transition: border-color 0.3s;
+      font-family: inherit;
+    }
+
+    #pregunta:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    button {
+      padding: 15px 30px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 20px;
+      color: #667eea;
+    }
+
+    .loading.active {
+      display: block;
+    }
+
+    .spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #999;
+    }
+
+    .empty-state svg {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 15px;
+      opacity: 0.3;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>💻 Asistente de Computación</h2>
+      <p>Haz tus preguntas sobre tecnología y programación</p>
+    </div>
+
+    <div class="chat-container" id="chatContainer">
+      <div class="empty-state">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+        <p>Escribe tu primera pregunta para comenzar</p>
+      </div>
+    </div>
+
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p style="margin-top: 10px;">Pensando...</p>
+    </div>
+
+    <div class="input-container">
+      <div class="input-wrapper">
+        <input 
+          id="pregunta" 
+          placeholder="Escribe tu pregunta aquí..." 
+          onkeypress="handleKeyPress(event)"
+        >
+        <button onclick="send()" id="sendBtn">Enviar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const chatContainer = document.getElementById("chatContainer");
+    const loading = document.getElementById("loading");
+    const sendBtn = document.getElementById("sendBtn");
+    const preguntaInput = document.getElementById("pregunta");
+
+    function handleKeyPress(event) {
+      if (event.key === 'Enter') {
+        send();
+      }
+    }
+
+    function addMessage(text, isUser) {
+      const emptyState = chatContainer.querySelector('.empty-state');
+      if (emptyState) {
+        emptyState.remove();
+      }
+
+      const messageDiv = document.createElement("div");
+      messageDiv.className = `message ${isUser ? 'user' : 'assistant'}`;
+      
+      messageDiv.innerHTML = `
+        <div class="message-label">${isUser ? '👤 Tú' : '🤖 Asistente'}</div>
+        <div class="message-content">${text}</div>
+      `;
+      
+      chatContainer.appendChild(messageDiv);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    async function send() {
+      const pregunta = preguntaInput.value.trim();
+      
+      if (!pregunta) return;
+
+      addMessage(pregunta, true);
+      preguntaInput.value = "";
+      
+      loading.classList.add('active');
+      sendBtn.disabled = true;
+
+      try {
+        const res = await fetch("http://192.168.0.109:5001/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pregunta })
+        });
+
+        if (!res.ok) {
+          throw new Error('Error en la respuesta del servidor');
+        }
+
+        const data = await res.json();
+        addMessage(data.respuesta, false);
+      } catch (error) {
+        addMessage("Lo siento, hubo un error al procesar tu pregunta. Por favor, intenta de nuevo.", false);
+        console.error("Error:", error);
+      } finally {
+        loading.classList.remove('active');
+        sendBtn.disabled = false;
+        preguntaInput.focus();
+      }
+    }
+  </script>
+</body>
+</html>
