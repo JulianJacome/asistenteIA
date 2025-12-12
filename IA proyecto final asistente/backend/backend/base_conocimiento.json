@@ -1,0 +1,14 @@
+[
+  {
+    "keywords": ["no enciende", "no prende", "power"],
+    "respuesta": "Si el equipo no enciende, revisa el cable de corriente, la fuente de poder y prueba otro enchufe."
+  },
+  {
+    "keywords": ["pantalla negra", "no da imagen", "sin imagen"],
+    "respuesta": "Puede ser un problema de RAM o tarjeta de video. Prueba limpiando los módulos de RAM."
+  },
+  {
+    "keywords": ["wifi", "internet", "red"],
+    "respuesta": "Reinicia el router, verifica los controladores de red y verifica que el adaptador esté habilitado."
+  }
+]
