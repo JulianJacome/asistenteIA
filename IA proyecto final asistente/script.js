@@ -102,14 +102,14 @@ async function enviar() {
     input.value = "";
 
     mostrarEscribiendo();
-
+    //Se hace el llamado a la API
     try {
         const res = await fetch("http://192.168.0.109:5001/chat", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ pregunta: texto })
         });
-
+    // Obtener la respuesta en formato JSON
         const data = await res.json();
         ocultarEscribiendo();
         agregarMensaje(data.respuesta, "bot");
